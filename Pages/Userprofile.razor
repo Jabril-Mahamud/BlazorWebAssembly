@@ -1,62 +1,97 @@
 ﻿@page "/userprofile"
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.AspNetCore.Components
+@using Radzen
+@using System.Security.Claims
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NotificationService NotificationService
 
 <AuthorizeView>
     <Authorized>
-        <div class="container mt-5">
-            <div class="row">
-                <div class="col-md-8 offset-md-2">
-                    <div class="card">
-                        <div class="card-header bg-primary text-white">
-                            <h4 class="mb-0">User Information</h4>
-                        </div>
-                        <div class="card-body">
-                            <dl class="row">
-                                <dt class="col-sm-3">Name:</dt>
-                                <dd class="col-sm-9">@context.User.Identity?.Name</dd>
+        <RadzenCard Style="max-width: 600px; margin: auto; padding: 1rem;" Class="shadow-sm">
+            <RadzenCardHeader>
+                <h4 class="mb-0">User Profile</h4>
+            </RadzenCardHeader>
+            <RadzenCardBody>
+                <dl class="row">
+                    <!-- Display the specific claims -->
+                    <dt class="col-sm-4 font-weight-bold">City:</dt>
+                    <dd class="col-sm-8">@city</dd>
 
-                                <dt class="col-sm-3">Email:</dt>
-                                <dd class="col-sm-9">
-                                    @(context.User.Identity?.IsAuthenticated == true
-                                        ? context.User.FindFirst("email")?.Value
-                                        : "Not available")
-                                </dd>
-                            </dl>
-                            <h5>Claims:</h5>
-                            <ul class="list-group">
-                                @foreach (var claim in context.User.Claims)
+                    <dt class="col-sm-4 font-weight-bold">Country:</dt>
+                    <dd class="col-sm-8">@country</dd>
 
+                    <dt class="col-sm-4 font-weight-bold">Name:</dt>
+                    <dd class="col-sm-8">@name</dd>
+
+                    <dt class="col-sm-4 font-weight-bold">Family Name:</dt>
+                    <dd class="col-sm-8">@familyName</dd>
+
+                    <dt class="col-sm-4 font-weight-bold">Emails:</dt>
+                    <dd class="col-sm-8">
+                        @if (emails.Any())
+                        {
+                            <ul class="list-unstyled">
+                                @foreach (var email in emails)
                                 {
-                                    <li class="list-group-item">
-                                        <strong>@claim.Type:</strong> @claim.Value
-                                    </li>
+                                    <li>@email</li>
                                 }
                             </ul>
-                        </div>
-                        <div class="card-footer text-center">
-                            <button class="btn btn-danger" @onclick="BeginLogOut">Log out</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        }
+                        else
+                        {
+                            <span>Not available</span>
+                        }
+                    </dd>
+                </dl>
+            </RadzenCardBody>
+            <RadzenCardFooter>
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Text="Log Out" Click="BeginLogOut" />
+            </RadzenCardFooter>
+        </RadzenCard>
     </Authorized>
     <NotAuthorized>
         <div class="container mt-5">
-            <div class="alert alert-warning" role="alert">
-                You are not authorized to view this page. <a href="authentication/login" class="alert-link">Log in</a> to access this content.
+            <div class="alert alert-warning text-center" role="alert">
+                <h4 class="alert-heading">Access Denied</h4>
+                <p>You are not authorized to view this page.</p>
+                <a href="authentication/login" class="btn btn-primary">Log in</a>
             </div>
         </div>
     </NotAuthorized>
 </AuthorizeView>
 
 @code {
-    private void BeginLogOut()
+    private string city = "Not available";
+    private string country = "Not available";
+    private string name = "Not available";
+    private string familyName = "Not available";
+    private List<string> emails = new List<string>();
 
+    protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
 
+        if (user.Identity.IsAuthenticated)
+        {
+            city = user.FindFirst("city")?.Value ?? "Not available";
+            country = user.FindFirst("country")?.Value ?? "Not available";
+            name = user.FindFirst("name")?.Value ?? "Not available";
+            familyName = user.FindFirst("family_name")?.Value ?? "Not available";
+
+            var emailClaim = user.FindFirst("emails");
+            if (emailClaim != null && !string.IsNullOrEmpty(emailClaim.Value))
+            {
+                // Assuming emails are stored as a JSON array string
+                emails = System.Text.Json.JsonSerializer.Deserialize<List<string>>(emailClaim.Value) ?? new List<string>();
+            }
+        }
+    }
+
+    private void BeginLogOut()
+    {
         Navigation.NavigateToLogout("authentication/logout");
-
     }
 }
