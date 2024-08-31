@@ -15,8 +15,4 @@
     <PackageReference Include="System.Text.Json" Version="8.0.4" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Pages\Accounts\" />
-  </ItemGroup>
-
 </Project>
