@@ -8,11 +8,10 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-
-// Configure HttpClient for ProductService
+// Configure HttpClient for API calls
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("https://blazorwebassembly20240831193600.azurewebsites.net/")
+    BaseAddress = new Uri(builder.Configuration["ApiBaseAddress"])
 });
 
 // Register Radzen's NotificationService
@@ -22,7 +21,6 @@ builder.Services.AddScoped<NotificationService>();
 builder.Services.AddMsalAuthentication(options =>
 {
     builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
-    // Configure additional authentication options if needed
 });
 
 await builder.Build().RunAsync();
