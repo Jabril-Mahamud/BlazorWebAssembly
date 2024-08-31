@@ -1,0 +1,62 @@
+﻿@page "/userprofile"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject NavigationManager Navigation
+
+<AuthorizeView>
+    <Authorized>
+        <div class="container mt-5">
+            <div class="row">
+                <div class="col-md-8 offset-md-2">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h4 class="mb-0">User Information</h4>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-3">Name:</dt>
+                                <dd class="col-sm-9">@context.User.Identity?.Name</dd>
+
+                                <dt class="col-sm-3">Email:</dt>
+                                <dd class="col-sm-9">
+                                    @(context.User.Identity?.IsAuthenticated == true
+                                        ? context.User.FindFirst("email")?.Value
+                                        : "Not available")
+                                </dd>
+                            </dl>
+                            <h5>Claims:</h5>
+                            <ul class="list-group">
+                                @foreach (var claim in context.User.Claims)
+
+                                {
+                                    <li class="list-group-item">
+                                        <strong>@claim.Type:</strong> @claim.Value
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                        <div class="card-footer text-center">
+                            <button class="btn btn-danger" @onclick="BeginLogOut">Log out</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="container mt-5">
+            <div class="alert alert-warning" role="alert">
+                You are not authorized to view this page. <a href="authentication/login" class="alert-link">Log in</a> to access this content.
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private void BeginLogOut()
+
+    {
+
+        Navigation.NavigateToLogout("authentication/logout");
+
+    }
+}
